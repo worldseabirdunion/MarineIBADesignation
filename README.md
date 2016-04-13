@@ -1,4 +1,4 @@
-# MarineIBADesignation
+# IBA Designation from at-sea data
 These are a collection of codes for helping in the designation of marine IBAs using at-sea data (tracking)
 
 If using these codes, please cite the following paper:   
