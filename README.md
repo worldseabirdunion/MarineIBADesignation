@@ -1,4 +1,7 @@
-# IBA Designation from at-sea data
+# IBA Designation from at-sea data UPDATES
+
+ </strong>IMPORTANT: This 'updates' branch is a experimental. Some of the original marine IBA code is ~ 5 years old and has relies on old R packages. I will update various scripts as I use them. Note I am running Linux, but will try update script so it functions on all platforms :)
+
 These are a collection of codes for helping in the designation of marine IBAs using at-sea data (tracking)
 
 If using these codes, please cite the following paper:   
