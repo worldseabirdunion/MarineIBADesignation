@@ -15,6 +15,10 @@
 ## and should be provided in Km.
 ## UDLev should be the quantile to be used for the Utilisation Distribution.
 
+## Updated Mark Miller 2016, works with adehabitatHR instead of
+## now defunct adehabitat. The code will throw an error if an ID
+## has less than 5 points or if the Scale has been set unreasonably
+## high or low for the data.
 
 batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
 {
@@ -42,40 +46,40 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   #DataGroup$X <- DataGroup@coords[,1]
   #DataGroup$Y <- DataGroup@coords[,2]
   
-  UIDs <- unique(DataGroup$ID)
-  note<-0
-  KDE.Sp <- NULL
-  for(i in 1:length(UIDs))
-  {
-    Trip <- DataGroup[DataGroup$ID == UIDs[i],]
-    if(nrow(Trip@data)<6)
-    {
-      print(paste("ID =", UIDs[i], "has fewer than 6 points, too small to fit kernel. It will be excluded"))
-      if(i == 1){note <- 1}
-      next
-    }
-    TripCoords <- data.frame(Trip@coords)
+  #UIDs <- unique(DataGroup$ID)
+  #note<-0
+  #KDE.Sp <- NULL
+  #for(i in 1:length(UIDs))
+  #{
+  #  Trip <- DataGroup[DataGroup$ID == UIDs[i],]
+  #  if(nrow(Trip@data)<6)
+  #  {
+  #    print(paste("ID =", UIDs[i], "has fewer than 6 points, too small to fit kernel. It will be excluded"))
+  #    if(i == 1){note <- 1}
+  #    next
+  #  }
+    TripCoords <- data.frame(DataGroup@coords)
     Temp <- data.frame(TripCoords[,1], TripCoords[,2])
     Ext <- (min(Temp[,1]) + 3 * diff(range(Temp[,1])))
     if(Ext < (Scale * 1000 * 2)) {BExt <- ceiling((Scale * 1000 * 3)/(diff(range(Temp[,1]))))} else {BExt <- 3}
     KDE.Surface <- kernelUD(DataGroup, h=(Scale * 1000), grid=100, extent=BExt, same4all=FALSE)
-    KDE.UD <- getverticeshr(KDE.Surface, lev = UDLev)
-    KDE.Sp1 <- kver2spol(KDE.UD)
+    KDE.Spdf <- getverticeshr(KDE.Surface, lev = UDLev)
+    #KDE.Sp1 <- kver2spol(KDE.UD) redundant now
     
-    if(i==1 | note==1) {KDE.Sp <- KDE.Sp1} else
-      KDE.Sp <- spRbind(KDE.Sp, KDE.Sp1)
-    plot(KDE.Sp)
-    note<-0
-    if(i < length(UIDs)) {legend("bottomleft", paste(UIDs[i+1]))}
-  }
+    #if(i==1 | note==1) {KDE.Sp <- KDE.Sp1} else
+    #  KDE.Sp <- spRbind(KDE.Sp, KDE.Sp1)
+    #plot(KDE.Sp)
+    #note<-0
+    #if(i < length(UIDs)) {legend("bottomleft", paste(UIDs[i+1]))}
+  #}
   
-  UIDs <- names(which(table(DataGroup$ID)>5))
-  KDE.Sp@proj4string <- DgProj
-  KDE.Wgs <- spTransform(KDE.Sp, CRS=CRS("+proj=longlat"))
-  Tbl <- data.frame(Name_0 = rep(1, length(UIDs)), Name_1 = 1:length(UIDs), ID = UIDs)
-  row.names(Tbl) <- UIDs
-  KDE.Spdf <- SpatialPolygonsDataFrame(KDE.Sp, data=Tbl)
+  #UIDs <- names(which(table(DataGroup$ID)>5))
+  #KDE.Sp@proj4string <- DgProj
+  KDE.Wgs <- spTransform(KDE.Spdf, CRS=CRS("+proj=longlat"))
+  #Tbl <- data.frame(Name_0 = rep(1, length(UIDs)), Name_1 = 1:length(UIDs), ID = UIDs)
+  #row.names(Tbl) <- UIDs
+  #KDE.Spdf <- SpatialPolygonsDataFrame(KDE.Sp, data=Tbl)
   
-  plot(KDE.Spdf, border=factor(UIDs))
+  plot(KDE.Spdf, border=factor(KDE.Spdf$id))
   return(KDE.Spdf)
 }
