@@ -21,7 +21,7 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   require(sp)
   require(maptools)
   require(rgdal)
-  require(adehabitat)
+  require(adehabitatHR)
   require(geosphere)
   
   if(!"Latitude" %in% names(DataGroup)) stop("Latitude field does not exist")
