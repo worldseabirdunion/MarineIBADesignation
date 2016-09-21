@@ -31,14 +31,16 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   if(class(DataGroup)!= "SpatialPointsDataFrame")     ## convert to SpatialPointsDataFrame and project
   {
     mid_point<-data.frame(centroid(cbind(DataGroup$Longitude, DataGroup$Latitude)))
-    DataGroup.Wgs <- SpatialPoints(data.frame(DataGroup$Longitude, DataGroup$Latitude), proj4string=CRS("+proj=longlat + datum=wgs84"))
+    DataGroup.Wgs <- SpatialPoints(data.frame(DataGroup$Longitude, DataGroup$Latitude), proj4string=CRS("+proj=longlat"))
     DgProj <- CRS(paste("+proj=laea +lon_0=", mid_point$lon, " +lat_0=", mid_point$lat, sep=""))
     DataGroup.Projected <- spTransform(DataGroup.Wgs, CRS=DgProj)
-    DataGroup <- SpatialPointsDataFrame(DataGroup.Projected, data = DataGroup)
+    DataGroup <- SpatialPointsDataFrame(DataGroup.Projected, data = data.frame(ID=DataGroup$ID))
   }else{DgProj<-DataGroup@proj4string}
   
-  DataGroup$X <- DataGroup@coords[,1]
-  DataGroup$Y <- DataGroup@coords[,2]
+  DataGroup$ID<-factor(DataGroup$ID)#drops unwanted levels in DataGroup factor if they occur
+  
+  #DataGroup$X <- DataGroup@coords[,1]
+  #DataGroup$Y <- DataGroup@coords[,2]
   
   UIDs <- unique(DataGroup$ID)
   note<-0
@@ -56,7 +58,7 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
     Temp <- data.frame(TripCoords[,1], TripCoords[,2])
     Ext <- (min(Temp[,1]) + 3 * diff(range(Temp[,1])))
     if(Ext < (Scale * 1000 * 2)) {BExt <- ceiling((Scale * 1000 * 3)/(diff(range(Temp[,1]))))} else {BExt <- 3}
-    KDE.Surface <- kernelUD(data.frame(TripCoords[,1], TripCoords[,2]), id=Trip$ID, h=(Scale * 1000), grid=100, extent=BExt, same4all=FALSE)
+    KDE.Surface <- kernelUD(DataGroup, h=(Scale * 1000), grid=100, extent=BExt, same4all=FALSE)
     KDE.UD <- getverticeshr(KDE.Surface, lev = UDLev)
     KDE.Sp1 <- kver2spol(KDE.UD)
     
@@ -69,7 +71,7 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   
   UIDs <- names(which(table(DataGroup$ID)>5))
   KDE.Sp@proj4string <- DgProj
-  KDE.Wgs <- spTransform(KDE.Sp, CRS=CRS("+proj=longlat +ellps=WGS84"))
+  KDE.Wgs <- spTransform(KDE.Sp, CRS=CRS("+proj=longlat"))
   Tbl <- data.frame(Name_0 = rep(1, length(UIDs)), Name_1 = 1:length(UIDs), ID = UIDs)
   row.names(Tbl) <- UIDs
   KDE.Spdf <- SpatialPolygonsDataFrame(KDE.Sp, data=Tbl)
