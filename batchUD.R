@@ -35,7 +35,7 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   if(class(DataGroup)!= "SpatialPointsDataFrame")     ## convert to SpatialPointsDataFrame and project
   {
     mid_point<-data.frame(centroid(cbind(DataGroup$Longitude, DataGroup$Latitude)))
-    DataGroup.Wgs <- SpatialPoints(data.frame(DataGroup$Longitude, DataGroup$Latitude), proj4string=CRS("+proj=longlat"))
+    DataGroup.Wgs <- SpatialPoints(data.frame(DataGroup$Longitude, DataGroup$Latitude), proj4string=CRS("+proj=longlat +datum=WGS84"))
     DgProj <- CRS(paste("+proj=laea +lon_0=", mid_point$lon, " +lat_0=", mid_point$lat, sep=""))
     DataGroup.Projected <- spTransform(DataGroup.Wgs, CRS=DgProj)
     DataGroup <- SpatialPointsDataFrame(DataGroup.Projected, data = data.frame(ID=DataGroup$ID))
@@ -62,8 +62,8 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
     Temp <- data.frame(TripCoords[,1], TripCoords[,2])
     Ext <- (min(Temp[,1]) + 3 * diff(range(Temp[,1])))
     if(Ext < (Scale * 1000 * 2)) {BExt <- ceiling((Scale * 1000 * 3)/(diff(range(Temp[,1]))))} else {BExt <- 3}
-    KDE.Surface <- kernelUD(DataGroup, h=(Scale * 1000), grid=100, extent=BExt, same4all=FALSE)
-    KDE.Spdf <- getverticeshr(KDE.Surface, lev = UDLev)
+    KDE.Surface <- kernelUD(DataGroup, h=(Scale * 1000), same4all=TRUE) 
+    KDE.Spdf <- getverticeshr(KDE.Surface, percent = UDLev)
     #KDE.Sp1 <- kver2spol(KDE.UD) redundant now
     
     #if(i==1 | note==1) {KDE.Sp <- KDE.Sp1} else
@@ -75,7 +75,7 @@ batchUD <- function(DataGroup, Scale = 50, UDLev = 50)
   
   #UIDs <- names(which(table(DataGroup$ID)>5))
   #KDE.Sp@proj4string <- DgProj
-  KDE.Wgs <- spTransform(KDE.Spdf, CRS=CRS("+proj=longlat"))
+  KDE.Wgs <- spTransform(KDE.Spdf, CRS=CRS("+proj=longlat +datum=WGS84"))
   #Tbl <- data.frame(Name_0 = rep(1, length(UIDs)), Name_1 = 1:length(UIDs), ID = UIDs)
   #row.names(Tbl) <- UIDs
   #KDE.Spdf <- SpatialPolygonsDataFrame(KDE.Sp, data=Tbl)
