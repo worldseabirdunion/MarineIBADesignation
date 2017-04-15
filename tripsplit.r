@@ -111,7 +111,7 @@ tripSplit <- function(Track, Colony, InnerBuff = 15, ReturnBuff = 45, Duration =
         points(Track[k,], col=2, pch=16, cex=0.5)
         Dist <- Track$ColDist[k]
       }
-      Time.Diff <- (Track$TrackTime[k] - Track$TrackTime[i]) / 3600
+      Time.Diff <- as.numeric(difftime(Track$TrackTime[k], Track$TrackTime[i], units = "hours")
       Max.Dist <- max(Track$ColDist[i:k])
       if(Time.Diff < Duration |  Max.Dist < InnerBuff)
       {
