@@ -22,7 +22,7 @@ bootstrap <- function(DataGroup, Scale=100, Iteration=50)
   require(sp)
   require(geosphere)
   require(rgdal)
-  require(adehabitat)
+  require(adehabitatHR)
   require(foreach)
   require(doParallel)
   require(parallel)
@@ -66,15 +66,14 @@ bootstrap <- function(DataGroup, Scale=100, Iteration=50)
     Output <- data.frame(SampleSize = N, InclusionMean = 0,Iteration=i)
     
     RanNum <- sample(UIDs, N, replace=F)
-    SelectedCoords <- coordinates(DataGroup[DataGroup$ID %in% RanNum,])
+    SelectedCoords <- as.data.frame(coordinates(DataGroup[DataGroup$ID %in% RanNum,]))
     NotSelected <- DataGroup[!DataGroup$ID %in% RanNum,]
     Temp <- data.frame(SelectedCoords[,1], SelectedCoords[,2])
     Ext <- (min(Temp[,1]) + 3 * diff(range(Temp[,1])))
     if(Ext < (Scale * 1000 * 2)) {BExt <- ceiling((Scale * 1000 * 3)/(diff(range(Temp[,1]))))} else {BExt <- 3}
-    
-    KDE.Surface <- kernelUD(data.frame(SelectedCoords[,1], SelectedCoords[,2]), id=rep(1, nrow(SelectedCoords)), h=Scale*1000, grid=70, extent=BExt,  same4all=FALSE)
-    KDE.UD <- getverticeshr(KDE.Surface, lev = UDLev)
-    KDE.Spl <- kver2spol(KDE.UD)
+    coordinates(SelectedCoords) <- ~DataGroup.Longitude + DataGroup.Latitude
+    KDE.Surface <- kernelUD(SelectedCoords, h=Scale*1000, grid=70, extent=BExt,  same4all=FALSE)
+    KDE.Spl <- getverticeshr(KDE.Surface, lev = UDLev)
     KDE.Spl@proj4string <- DgProj
     Overlain <- over(NotSelected, KDE.Spl)
     Output$InclusionMean <- length(which(Overlain == 1))/nrow(NotSelected)
